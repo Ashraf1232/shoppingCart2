@@ -72,21 +72,21 @@ namespace ShoppingCart_webApp.Controllers
             }
         }
 
-        ////https://localhost:7056/api/ApI/DeleteCategory?itemId=3002
-        //[HttpPost]
-        //public ActionResult DeleteCategory(int itemId)
-        //{
-        //    try
-        //    {
-        //        var data = HRML.DeleteCategoryById(itemId);
-        //        return Ok(data);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //        return Ok();
-           
-        //    }
-        //}
+        //https://localhost:7056/api/ApI/DeleteCategory?itemId=3002
+        [HttpPost]
+        public ActionResult DeleteCategory(int itemId)
+        {
+            try
+            {
+                var data = HRML.DeleteCategoryById(itemId);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return Ok();
+
+            }
+        }
     }
 }
