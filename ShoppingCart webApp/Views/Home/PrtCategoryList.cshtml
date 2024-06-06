@@ -1,0 +1,60 @@
+﻿@model IEnumerable<ShoppingCart_webApp.Models.Master_Category>
+
+<style>
+	
+	.table th, .table td, .table h3 {
+		text-decoration: none;
+	}
+
+		.table th:hover, .table td:hover, .table h3:hover {
+			text-decoration: none;
+		}
+
+	.table a {
+		text-decoration: none;
+		color: inherit; /* Inherit the color to prevent the default link color */
+	}
+
+		.table a:hover {
+			text-decoration: none;
+			color: inherit; /* Ensure the color remains consistent on hover */
+		}
+
+</style>
+<table class="table bg-light">
+		<h3 style="text-decoration:none; color:orangered">CATEGORIES LISTS</h3>
+		<thead>
+			<tr>
+				<th>_Id</th>
+				<th>_CategoryName</th>
+				<th>_IsActive</th>
+				<th>_EntryDate</th>
+				<th style="padding-left: 50px;">Action</th>
+
+			</tr>
+		</thead>
+		<tbody>
+			@{
+				var i = 1;
+			}
+			@foreach (var item in Model)
+			{
+
+				<tr>
+					<td>@i</td>
+					<td>@item._CategoryName</td>
+					<td>
+						@(item._IsActive ? "Active" : "Inactive")
+					</td>
+					<td>@item._EntryDate</td>
+					<td>
+						<button id="categoryUpdate" class="btn btn-primary" onclick="updateCategory('@item._Id')">Edit</button>
+						<button id="categorydelete" class="btn btn-danger" onclick="deleteCategory('@item._Id')">Delete</button>
+					</td>
+
+				</tr>
+				i++;
+			}
+
+		</tbody>
+	</table>

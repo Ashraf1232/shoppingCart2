@@ -1,0 +1,410 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<html>
+<head>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        body {
+            background: #accdc3;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
+            ul li {
+                height: 50px;
+                width: 150px;
+                background: black;
+                float: left;
+                text-align: center;
+            }
+
+                ul li a {
+                    text-decoration: none;
+                    line-height: 50px;
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: white
+                }
+
+                    ul li a:hover {
+                        background: aqua;
+                        color: black;
+                        display: block;
+                        text-decoration: none;
+                    }
+
+            ul ul {
+                display: none;
+            }
+
+            ul li:hover > ul {
+                display: block;
+            }
+
+        ul {
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <ul>
+        <li><a href="/home/Index" />CATEGORY</li>
+        <li><a href="/home/ProductPage" />PRODUCT</li>
+        <li><a href="#" />CUSTOMER</li>
+    </ul>
+    <br></br>
+    <br></br>
+
+    <button class="btn btn-dark float-end mb-3" data-toggle="modal" data-target="#Modal" id="btnAdd">
+        ADD Category
+    </button>
+
+    <div id="DivPrtCategoryList"></div>
+
+    <div class="modal " id="Modal">
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h1 class="text-black " id="addCategory">ADD CATEGORY</h1>
+                    <button class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-dark text-white">
+                    <div class="modal-body">
+                        <form method="post">
+                            <input type="hidden" id="hiddenCategoryId" />
+
+                            <div class="form-group">
+                                <label for="categoryName">Category Name:</label>
+                                <input type="text" class="form-control" id="categoryName" oninput="validCheck(this)" name="categoryName" />
+                            </div>
+                            <div class="form-group">
+                                <label for="isActive">Is Active:</label>
+                                <input type="checkbox" class="form-check-input mx-3" id="isActive" name="isActive" checked>
+                            </div>
+                            <input type="button" id="addMastercategory" value="Save" class="btn btn-success" />
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+
+
+<script>
+
+
+    //Add Category
+
+    $(document).ready(function () {
+
+        getPartialview();
+        $("#btnAdd").click(function () {
+            ShowModelPopup(false);
+        })
+
+        $("#addMastercategory").click(function (event) {
+                if (!validCheck(event)) {
+                return; // Exit the function if validation fails
+            } else {
+                var _CategoryName = $("#categoryName").val();
+                var _IsActive = $("#isActive").prop("checked");
+                var _Id = $("#hiddenCategoryId").val();
+                var obj = {
+                    "_CategoryName": _CategoryName,
+                    "_IsActive": _IsActive,
+                    "_Id": _Id
+                };
+
+                $.ajax({
+                    url: '/home/AddorUpdateCategory',
+                    type: 'post',
+                    data: obj,
+                    dataType: 'json',
+                    success: function (res) {
+                    $("#hiddenCategoryId").val(0);
+                    $('#Modal').trigger('click');
+                    $('#Modal').modal('hide');
+                        getPartialview();
+                      
+                        var statusCode = res.statusCode; // Access StatusCode property
+                        var message = res.message; // Access Message property
+
+                        console.log(statusCode); // Log the status code returned from the server
+                        console.log(message); // Log the message returned from the server
+
+                        alert(message); // Alert the message
+                        getPartialview();
+                        //location.reload();
+                    },
+                    error: function (err) {
+                        console.error(err); // Log any errors
+                    }
+                });
+            }
+        });
+    });
+
+
+    // Partial View
+
+    function getPartialview() {
+        $.ajax({
+            url: '/home/PrtCategoryList',
+            type: 'Get',
+            success: function (response) {
+                $("#DivPrtCategoryList").html('');
+                $("#DivPrtCategoryList").html(response);
+
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+
+    //Update Category
+
+    function updateCategory(categoryId) {
+        //alert(categoryId);
+        $.ajax({
+            url: '/home/UpdateCategory',
+            type: 'post',
+            dataType: 'json',
+            data: { 'categoryId': categoryId },
+            success: function (response) {             
+                $("#hiddenCategoryId").val(response._Id);
+                $("#categoryName").val(response._CategoryName);
+                $("#isActive").prop("checked", response._IsActive);
+                ShowModelPopup(true);
+                $('#Modal').modal('show');
+                $(document).on('click', '#Modal .close', function () {
+                    $('#Modal').modal('hide');
+                    $("#hiddenCategoryId").val(0);
+
+                    // setTimeout(function () {
+                    //     getPartialview();
+                    //     //location.reload();
+                    // },);
+                });
+            },
+            error: function () {
+                // Handle error if needed
+            }
+        });
+
+       
+    }
+
+
+    // Delete Category
+
+    function deleteCategory(itemId) {
+        //alert(itemId)
+        if (!itemId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Invalid item id!'
+            });
+            return; // Terminate function if itemId is invalid
+        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If user confirms, make AJAX request to delete the category
+                $.ajax({
+                    url: '/home/DeleteCategory',
+                    type: 'post',
+                    dataType: 'json',
+                    data: { 'itemId': itemId },
+                    success: function (response) {
+                        // Handle success response if needed
+                        if (response === 1) {
+                            Swal.fire(
+                                'Deleted!',
+                                'Your file has been deleted.',
+                                'success'
+                            ).then(() => {
+                                // Reload the table upon successful deletion
+                                //location.reload();
+                                getPartialview();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: 'Category deletion failed!'
+                            });
+                        }
+                    },
+                    error: function () {
+                        // Handle error
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Something went wrong!'
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+
+    //change update and add function click
+
+    function ShowModelPopup(isEditButtonClicked) {
+        if (isEditButtonClicked) {
+            $("#addMastercategory").val("Update");
+            $("#addCategory").text("Update Category");
+        }
+        else {
+            $("#addMastercategory").val("Add");
+            $("#addCategory").text("Add Category");
+            $("#categoryName").val('');
+
+
+        }
+        $('#Modal').modal('show');
+    }
+
+    //Text Category validation
+
+    function validCheck(event) {
+        var digitRegex = /[^a-zA-Z\s]+/g; // Regex to remove non-alphabetic characters
+        let x1 = document.getElementById("categoryName");
+
+        var categoryName = x1.value; // Get the updated value after replacement
+        if (!categoryName) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Field Required!',
+                text: 'Category Name is required.'
+            });
+            $("#categoryName").css("border", "2px solid red");
+            event.preventDefault(); // Prevent default action of the event
+            return false;
+        } 
+        else
+        {
+            var x = x1.value;
+            x1.value = x.replace(digitRegex, '');
+            var alphabeticRegex = /^[A-Za-z\s]+$/; // Allowing spaces in between words
+
+            if (alphabeticRegex.test(categoryName)) {
+                $("#categoryName").css("border", ""); // Remove red border if valid
+                return true;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Input!',
+                    text: 'Only letters and spaces are allowed.'
+                });
+                $("#categoryName").css("border", "2px solid red");
+                event.preventDefault(); // Prevent default action of the event
+                return false;
+            }
+        }
+    }
+
+
+
+
+
+    // $('#AddMasterCategory').click(function () {
+    // 	var categoryName = $('#categoryName').val();
+    // 	var categoryNameInput = $('#categoryName');
+
+    // 	// Check if the input field is empty
+    // 	if (!categoryName) {
+    // 		categoryNameInput.addClass('invalid');
+    // 		Swal.fire({
+    // 			icon: 'error',
+    // 			title: 'Empty Field!',
+    // 			text: 'This field is required.!'
+    // 		});
+    // 		return false;
+    // 	}
+
+    // 	// Check if the input contains any numbers
+    // 	var hasNumber = /\d/;
+    // 	if (hasNumber.test(categoryName)) {
+    // 		categoryNameInput.addClass('invalid');
+    // 		Swal.fire({
+    // 			icon: 'error',
+    // 			title: 'Oops..No Number Allowed',
+    // 			text: 'Numbers are not allowed in the category name!'
+    // 		});
+    // 		return false;
+    // 	}
+
+    // 	// Check if the input is at least 4 characters long
+    // 	if (categoryName.length < 4) {
+    // 		categoryNameInput.addClass('invalid');
+    // 		Swal.fire({
+    // 			icon: 'error',
+    // 			title: 'Too Short!',
+    // 			text: 'The category name must be at least 4 characters long.'
+    // 		});
+    // 		return false;
+    // 	}
+
+    // 	// Check if the input contains only letters and spaces
+    // 	var validCharacters = /^[A-Za-z\s]+$/;
+    // 	if (!validCharacters.test(categoryName)) {
+    // 		categoryNameInput.addClass('invalid');
+    // 		Swal.fire({
+    // 			icon: 'error',
+    // 			title: 'Invalid Characters!',
+    // 			text: 'The category name can only contain letters and spaces.'
+    // 		});
+    // 		return false;
+    // 	}
+
+    // 	// Check if the first word starts with a capital letter
+    // 	var firstWordCapitalized = /^[A-Z][a-z]*\s?/;
+    // 	if (!firstWordCapitalized.test(categoryName)) {
+    // 		categoryNameInput.addClass('invalid');
+    // 		Swal.fire({
+    // 			icon: 'error',
+    // 			title: 'Invalid Format!',
+    // 			text: 'The first word must start with a capital letter.'
+    // 		});
+    // 		return false;
+    // 	}
+
+    // 	// If validation passes, proceed
+    // 	categoryNameInput.removeClass('invalid');
+    // 	return true;
+    // });
+
+
+</script>
